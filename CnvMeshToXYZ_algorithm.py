@@ -35,7 +35,8 @@ from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterFeatureSource,
-                       QgsProcessingParameterFeatureSink)
+                       QgsProcessingOutputFile,
+                       QgsProcessingParameterField)
 
 
 class CnvMeshToXYZAlgorithm(QgsProcessingAlgorithm):
@@ -58,6 +59,7 @@ class CnvMeshToXYZAlgorithm(QgsProcessingAlgorithm):
 
     OUTPUT = 'OUTPUT'
     INPUT = 'INPUT'
+    FIELD = 'FIELD'
 
     def initAlgorithm(self, config):
         """
@@ -71,17 +73,27 @@ class CnvMeshToXYZAlgorithm(QgsProcessingAlgorithm):
             QgsProcessingParameterFeatureSource(
                 self.INPUT,
                 self.tr('Input layer'),
-                [QgsProcessing.TypeVectorAnyGeometry]
+                [QgsProcessing.TypeVectorPolygon]
             )
         )
+
+        self.addParameter(
+            QgsProcessingParameterField(
+                self.FIELD,
+                self.tr('Output value filed'),
+                '',
+                self.INPUT
+            )
+        )
+
 
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
         # algorithm is run in QGIS).
-        self.addParameter(
-            QgsProcessingParameterFeatureSink(
+        self.addOutput(
+            QgsProcessingOutputFile(
                 self.OUTPUT,
-                self.tr('Output layer')
+                self.tr('Output File name')
             )
         )
 

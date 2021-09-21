@@ -32,6 +32,10 @@ __revision__ = '$Format:%H$'
 
 from qgis.core import QgsProcessingProvider
 from .CnvMeshToXYZ_algorithm import CnvMeshToXYZAlgorithm
+import os
+import inspect
+from qgis.PyQt.QtGui import QIcon
+
 
 
 class CnvMeshToXYZProvider(QgsProcessingProvider):
@@ -63,7 +67,7 @@ class CnvMeshToXYZProvider(QgsProcessingProvider):
         string should be a unique, short, character only string, eg "qgis" or
         "gdal". This string should not be localised.
         """
-        return 'Aeroasahi'
+        return 'disaster data convert'
 
     def name(self):
         """
@@ -72,14 +76,17 @@ class CnvMeshToXYZProvider(QgsProcessingProvider):
 
         This string should be short (e.g. "Lastools") and localised.
         """
-        return self.tr('Aeroasahi')
+        return 'disaster data convert'
 
     def icon(self):
         """
         Should return a QIcon which is used for your provider inside
         the Processing toolbox.
         """
-        return QgsProcessingProvider.icon(self)
+        cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
+        icon = QIcon(os.path.join(os.path.join(cmd_folder, 'providerIcon.svg')))
+        return icon
+        #return QgsProcessingProvider.icon(self)
 
     def longName(self):
         """

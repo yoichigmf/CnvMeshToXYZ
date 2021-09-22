@@ -32,6 +32,7 @@ __revision__ = '$Format:%H$'
 
 from qgis.core import QgsProcessingProvider
 from .CnvMeshToXYZ_algorithm import CnvMeshToXYZAlgorithm
+from .AddMeshToTableAlgorithm import AddMeshToTableAlgorithm
 import os
 import inspect
 from qgis.PyQt.QtGui import QIcon
@@ -58,6 +59,7 @@ class CnvMeshToXYZProvider(QgsProcessingProvider):
         Loads all algorithms belonging to this provider.
         """
         self.addAlgorithm(CnvMeshToXYZAlgorithm())
+        self.addAlgorithm(AddMeshToTableAlgorithm())
         # add additional algorithms here
         # self.addAlgorithm(MyOtherAlgorithm())
 

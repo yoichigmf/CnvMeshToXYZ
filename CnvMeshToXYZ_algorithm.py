@@ -165,7 +165,7 @@ class CnvMeshToXYZAlgorithm(QgsProcessingAlgorithm):
         contain lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return 'ベクタラスタ変換'
+        return 'メッシュ'
 
     def tr(self, string):
         return QCoreApplication.translate('Processing', string)

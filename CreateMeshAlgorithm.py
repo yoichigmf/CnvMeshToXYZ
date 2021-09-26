@@ -30,16 +30,34 @@ __copyright__ = '(C) 2021 by Y.Kayama/Aeroasahi Corporation'
 
 __revision__ = '$Format:%H$'
 
-from qgis.PyQt.QtCore import QCoreApplication
+import json 
+from  .jpmeshmain  import  generate_meshes
+
+#from  .japanmesh\main  import  generate_meshes
+
+
+
+from qgis.PyQt.QtCore import ( QCoreApplication ,
+                           QVariant)
+
 from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterFeatureSource,
                        QgsProcessingParameterFeatureSink,
+                       QgsProcessingParameterExtent,
                        QgsProcessingParameterProviderConnection,
                        QgsProcessingParameterDatabaseSchema,
                        QgsProcessingParameterDatabaseTable,
                        QgsProcessingParameterBoolean,
+                       QgsProcessingParameterEnum,
+                       QgsWkbTypes,
+                       QgsCoordinateReferenceSystem,
+                       QgsFields,
+                       QgsField,
+                       QgsFeature,
+                       QgsGeometry,
+                       QgsPointXY,
                        QgsProviderRegistry,
                        QgsProviderConnectionException,
                        QgsProcessingException,
@@ -65,12 +83,9 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
     # calling from the QGIS console.
 
     OUTPUT = 'OUTPUT'
-    INPUT = 'INPUT'
-    FIELD = 'FIELD'
-    DATABASE = 'DATABASE'
-    TABLENAME = 'TABLENAME'
-    SCHEMA = 'SCHEMA'
-    OVERWRITE = 'OVERWRITE'
+    EXTENT = 'EXTENT'
+    LEVEL = 'LEVEL'
+    APPEND = 'APPEND'
 
 
     def initAlgorithm(self, config):
@@ -82,52 +97,33 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
         # We add the input vector features source. It can have any kind of
         # geometry.
         self.addParameter(
-            QgsProcessingParameterFeatureSource(
-                self.INPUT,
-                self.tr('Input layer'),
-                [QgsProcessing.TypeVectorPolygon]
+            QgsProcessingParameterExtent(
+                self.EXTENT,
+                self.tr('extent')
             )
         )
 
         self.addParameter(
-            QgsProcessingParameterField(
-                self.FIELD,
-                self.tr('MESH id filed'),
-                '',
-                self.INPUT
-            )
-        )
-        self.addParameter(
-            QgsProcessingParameterProviderConnection(
-                self.DATABASE,
-                self.tr('database'),  'postgres'
+        QgsProcessingParameterEnum(
+            self.LEVEL,
+            self.tr('Mesh level'),
+            ["1次メッシュ", "2次メッシュ","3次メッシュ","500mメッシュ","250mメッシュ","125mメッシュ","100mメッシュ","50mメッシュ","10mメッシュ","5mメッシュ"]
             )
         )
 
-        schema_param = QgsProcessingParameterDatabaseSchema(
-            self.SCHEMA,
-            self.tr('Schema (schema name)'), connectionParameterName=self.DATABASE, defaultValue='public', optional=True)
-        self.addParameter(schema_param)
-
-        table_param = QgsProcessingParameterDatabaseTable(
-            self.TABLENAME,
-            self.tr('Table to import to (leave blank to use layer name)'), defaultValue=None, connectionParameterName=self.DATABASE,
-            schemaParameterName=self.SCHEMA, optional=True, allowNewTableNames=True)
-        self.addParameter(table_param)
-
-        self.addParameter(QgsProcessingParameterBoolean(self.OVERWRITE,
-                                                        self.tr('Overwrite'), True))
+        self.addParameter(QgsProcessingParameterBoolean(self.APPEND,
+                                                        self.tr('append'), True))
 
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
         # algorithm is run in QGIS).
         
-        #self.addParameter(
-        #    QgsProcessingParameterFeatureSink(
-        #        self.OUTPUT,
-        #        self.tr('Output File name')
-        #    )
-        #)
+        self.addParameter(
+            QgsProcessingParameterFeatureSink(
+                self.OUTPUT,
+                self.tr('Output')
+            )
+        )
         
 
     def processAlgorithm(self, parameters, context, feedback):
@@ -135,51 +131,68 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
         Here is where the processing itself takes place.
         """
 
-        connection_name = self.parameterAsConnectionName(parameters, self.DATABASE, context)
+        extent = self.parameterAsExtent(parameters, self.EXTENT , context)
 
-        # resolve connection details to uri
-        try:
-            md = QgsProviderRegistry.instance().providerMetadata('postgres')
-            conn = md.createConnection(connection_name)
-        except QgsProviderConnectionException:
-            raise QgsProcessingException(self.tr('Could not retrieve connection details for {}').format(connection_name))
+        level = self.parameterAsInt(parameters, self.LEVEL , context)
 
+        append = self.parameterAsBoolean(parameters, self.APPEND, context)
 
+        ext = [[float(extent.xMinimum ()) ,float(extent.yMinimum ())] ,[float(extent.xMaximum()) ,float(extent.yMaximum())] ]
 
-        schema = self.parameterAsSchema(parameters, self.SCHEMA, context)
-        overwrite = self.parameterAsBoolean(parameters, self.OVERWRITE, context)
-        createIndex = self.parameterAsBoolean(parameters, self.CREATEINDEX, context)
-        convertLowerCase = self.parameterAsBoolean(parameters, self.LOWERCASE_NAMES, context)
-        dropStringLength = self.parameterAsBoolean(parameters, self.DROP_STRING_LENGTH, context)
-        forceSinglePart = self.parameterAsBoolean(parameters, self.FORCE_SINGLEPART, context)
-        primaryKeyField = self.parameterAsString(parameters, self.PRIMARY_KEY, context) or 'id'
-        encoding = self.parameterAsString(parameters, self.ENCODING, context)
+      
+        print(level)
+        print(extent)
+        # Return the results of the algorithm. In this case our only result is
+        # the feature sink which contains the processed features, but some
+        # algorithms may return multiple feature sinks, calculated numeric
+        # statistics, etc. These should all be included in the returned
+        # dictionary, with keys matching the feature corresponding parameter
+        # or output names.
 
-        # Retrieve the feature source and sink. The 'dest_id' variable is used
-        # to uniquely identify the feature sink, and must be included in the
-        # dictionary returned by the processAlgorithm function.
-        source = self.parameterAsSource(parameters, self.INPUT, context)
-
-
-        #(sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
-         #       context, source.fields(), source.wkbType(), source.sourceCrs())
+        fields = QgsFields()
+        fields.append(QgsField("code", QVariant.String))
+        crs = QgsCoordinateReferenceSystem("EPSG:6668")
+        (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
+                context, fields , QgsWkbTypes.Polygon, crs)
 
         # Compute the number of steps to display within the progress bar and
         # get features from source
-        total = 100.0 / source.featureCount() if source.featureCount() else 0
-        features = source.getFeatures()
-
-        for current, feature in enumerate(features):
-            # Stop the algorithm if cancel button has been clicked
+        for cmesh in generate_meshes( level+1,ext):
             if feedback.isCanceled():
                 break
+            print( cmesh['geometry'] )
+            #feature = json.load( cmesh )
+            fet = QgsFeature(fields)
+
+            fet["code"] = cmesh['code']   
+
+            Polygon1 = QgsGeometry.fromPolygonXY([[QgsPointXY(cmesh['geometry'][0][0][0],cmesh['geometry'][0][0][1]),
+                                        QgsPointXY( cmesh['geometry'][0][1][0],cmesh['geometry'][0][1][1]),
+                                          QgsPointXY( cmesh['geometry'][0][2][0],cmesh['geometry'][0][2][1]),
+                                            QgsPointXY( cmesh['geometry'][0][3][0],cmesh['geometry'][0][3][1]),
+                                              QgsPointXY( cmesh['geometry'][0][4][0],cmesh['geometry'][0][4][1])] ])
+
+                               
+
+            fet.setGeometry(Polygon1)
+                                        
+            #print( feature )
+            sink.addFeature(fet, QgsFeatureSink.FastInsert)
+
+        #total = 100.0 / source.featureCount() if source.featureCount() else 0
+        #features = source.getFeatures()
+
+        #for current, feature in enumerate(features):
+            # Stop the algorithm if cancel button has been clicked
+        #    if feedback.isCanceled():
+         #       break
 
             # Add a feature in the sink
-            #sink.addFeature(feature, QgsFeatureSink.FastInsert)
+         #   sink.addFeature(feature, QgsFeatureSink.FastInsert)
 
             # Update the progress bar
-            feedback.setProgress(int(current * total))
-
+        #    feedback.setProgress(int(current * total))
+        #"""
         # Return the results of the algorithm. In this case our only result is
         # the feature sink which contains the processed features, but some
         # algorithms may return multiple feature sinks, calculated numeric
@@ -187,6 +200,8 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
         # dictionary, with keys matching the feature corresponding parameter
         # or output names.
         return {self.OUTPUT: dest_id}
+        #return {self.OUTPUT: dest_id}
+        #return {"sample"}
 
     def name(self):
         """
@@ -196,7 +211,7 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
         lowercase alphanumeric characters only and no spaces or other
         formatting characters.
         """
-        return ' CreateMeshAlgorithm'
+        return 'CreateMeshAlgorithm'
 
     def displayName(self):
         """

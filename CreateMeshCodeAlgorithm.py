@@ -117,12 +117,14 @@ class  CreateMeshCodeAlgorithm(QgsProcessingAlgorithm):
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
         # algorithm is run in QGIS).
-        
-        self.addParameter(
-            QgsProcessingParameterFeatureSink(
+        sinkp =    QgsProcessingParameterFeatureSink(
                 self.OUTPUT,
                 self.tr('Output')
             )
+
+        sinkp.setSupportsAppend( True )
+        self.addParameter(
+             sinkp
         )
         
 
@@ -178,12 +180,12 @@ class  CreateMeshCodeAlgorithm(QgsProcessingAlgorithm):
             #Polygon1 = QgsGeometry.fromPolygonXY([[QgsPointXY(cmesh['geometry'][0][0][0],cmesh['geometry'][0][0][1]),
             #                            QgsPointXY( cmesh['geometry'][0][1][0],cmesh['geometry'][0][1][1]),
             #                              QgsPointXY( cmesh['geometry'][0][2][0],cmesh['geometry'][0][2][1]),
-           #                                 QgsPointXY( cmesh['geometry'][0][3][0],cmesh['geometry'][0][3][1]),
-          #                                    QgsPointXY( cmesh['geometry'][0][4][0],cmesh['geometry'][0][4][1])] ])
+            #                                QgsPointXY( cmesh['geometry'][0][3][0],cmesh['geometry'][0][3][1]),
+            #                                  QgsPointXY( cmesh['geometry'][0][4][0],cmesh['geometry'][0][4][1])] ])
 
                                
 
-        #    fet.setGeometry(Polygon1)
+            #fet.setGeometry(Polygon1)
                                         
             #print( feature )
             sink.addFeature(fet, QgsFeatureSink.FastInsert)

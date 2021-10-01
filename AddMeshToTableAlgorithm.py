@@ -148,7 +148,7 @@ class AddMeshToTableAlgorithm(QgsProcessingAlgorithm):
 
         schema = self.parameterAsSchema(parameters, self.SCHEMA, context)
         overwrite = self.parameterAsBoolean(parameters, self.OVERWRITE, context)
-        createIndex = self.parameterAsBoolean(parameters, self.CREATEINDEX, context)
+       # createIndex = self.parameterAsBoolean(parameters, self.CREATEINDEX, context)
         convertLowerCase = self.parameterAsBoolean(parameters, self.LOWERCASE_NAMES, context)
         dropStringLength = self.parameterAsBoolean(parameters, self.DROP_STRING_LENGTH, context)
         forceSinglePart = self.parameterAsBoolean(parameters, self.FORCE_SINGLEPART, context)
@@ -186,7 +186,7 @@ class AddMeshToTableAlgorithm(QgsProcessingAlgorithm):
         # statistics, etc. These should all be included in the returned
         # dictionary, with keys matching the feature corresponding parameter
         # or output names.
-        return {self.OUTPUT: dest_id}
+        #return {self.OUTPUT: dest_id}
 
     def name(self):
         """

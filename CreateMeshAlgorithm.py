@@ -111,20 +111,21 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
             )
         )
 
-        self.addParameter(QgsProcessingParameterBoolean(self.APPEND,
-                                                        self.tr('append'), True))
+        #self.addParameter(QgsProcessingParameterBoolean(self.APPEND,
+        #                                                self.tr('append'), True))
 
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
         # algorithm is run in QGIS).
-        
-        self.addParameter(
-            QgsProcessingParameterFeatureSink(
+        sinkp =    QgsProcessingParameterFeatureSink(
                 self.OUTPUT,
                 self.tr('Output')
             )
+
+        sinkp.setSupportsAppend( True )
+        self.addParameter(
+             sinkp
         )
-        
 
     def processAlgorithm(self, parameters, context, feedback):
         """
@@ -135,7 +136,7 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
 
         level = self.parameterAsInt(parameters, self.LEVEL , context)
 
-        append = self.parameterAsBoolean(parameters, self.APPEND, context)
+        #append = self.parameterAsBoolean(parameters, self.APPEND, context)
 
         ext = [[float(extent.xMinimum ()) ,float(extent.yMinimum ())] ,[float(extent.xMaximum()) ,float(extent.yMaximum())] ]
 
@@ -155,6 +156,7 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
         (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
                 context, fields , QgsWkbTypes.Polygon, crs)
 
+        #sink.setSupportsAppend( True )
         # Compute the number of steps to display within the progress bar and
         # get features from source
         for cmesh in generate_meshes( level+1,ext):

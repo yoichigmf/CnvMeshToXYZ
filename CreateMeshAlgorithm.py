@@ -32,6 +32,7 @@ __revision__ = '$Format:%H$'
 
 import json 
 from  .jpmeshmain  import  generate_meshes
+from  .latlonmesh  import  getmeshID
 
 #from  .japanmesh\main  import  generate_meshes
 
@@ -85,7 +86,7 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
     OUTPUT = 'OUTPUT'
     EXTENT = 'EXTENT'
     LEVEL = 'LEVEL'
-    APPEND = 'APPEND'
+    ADDMESHID = 'ADDMESHID'
 
 
     def initAlgorithm(self, config):
@@ -111,8 +112,8 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
             )
         )
 
-        #self.addParameter(QgsProcessingParameterBoolean(self.APPEND,
-        #                                                self.tr('append'), True))
+        self.addParameter(QgsProcessingParameterBoolean(self.ADDMESHID,
+                                                        self.tr('add forth mesh id'), True))
 
         # We add a feature sink in which to store our processed features (this
         # usually takes the form of a newly created vector layer when the
@@ -136,7 +137,7 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
 
         level = self.parameterAsInt(parameters, self.LEVEL , context)
 
-        #append = self.parameterAsBoolean(parameters, self.APPEND, context)
+        addmesh = self.parameterAsBoolean(parameters, self.ADDMESHID, context)
 
         ext = [[float(extent.xMinimum ()) ,float(extent.yMinimum ())] ,[float(extent.xMaximum()) ,float(extent.yMaximum())] ]
 
@@ -152,6 +153,12 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
 
         fields = QgsFields()
         fields.append(QgsField("code", QVariant.String))
+
+        if addmesh: 
+        #   4次メッシュコード
+             fields.append(QgsField("fcode", QVariant.String))
+
+
         crs = QgsCoordinateReferenceSystem("EPSG:6668")
         (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT,
                 context, fields , QgsWkbTypes.Polygon, crs)
@@ -162,7 +169,7 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
         for cmesh in generate_meshes( level+1,ext):
             if feedback.isCanceled():
                 break
-            print( cmesh['geometry'] )
+            #print( cmesh['geometry'] )
             #feature = json.load( cmesh )
             fet = QgsFeature(fields)
 
@@ -176,7 +183,15 @@ class  CreateMeshAlgorithm(QgsProcessingAlgorithm):
 
                                
 
+     
             fet.setGeometry(Polygon1)
+
+            if addmesh:
+            #  4次メッシュコードの取得とセット
+                np = Polygon1.centroid()
+                m4code = getmeshID(np.asPoint().y(), np.asPoint().x())
+                fet["fcode"] = m4code
+
                                         
             #print( feature )
             sink.addFeature(fet, QgsFeatureSink.FastInsert)

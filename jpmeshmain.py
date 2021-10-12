@@ -1,29 +1,4 @@
-
-"""
-/***************************************************************************
-https://github.com/MIERUNE/japan-mesh-tool
-
-
-
-MIERUNE/japan-mesh-tool is licensed under the
-
-MIT License
-A short and simple permissive license with conditions only requiring preservation of copyright and license notices. Licensed works, modifications, and larger works may be distributed under different terms and without source code.
-
-
-Copyright 2020 MIERUNE Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- ***************************************************************************/
-"""
-
 from functools import lru_cache
-
 import os
 import math
 
@@ -178,6 +153,46 @@ def get_meshcode(meshnum: int, x: int, y: int) -> str:
         return ""
     elif meshnum == 4 or meshnum == 5 or meshnum == 6:
         return get_meshcode(parent, math.floor(x / ratio), math.floor(y / ratio)) + str((y % ratio) * 2 + (x % ratio) + 1)
+        
+    elif meshnum >= 11 and meshnum <= 17:
+    
+        if meshnum == 11:
+               divstr = "1"
+        elif  meshunum == 12:
+               divstr = "2"
+        elif  meshunum == 13:
+               divstr = "5"
+        elif   meshunum == 14:
+               divstr = "3"
+               
+        elif    meshnum == 15:
+               divstr = "6"
+        elif    meshnum == 16:
+                divstr = "4"
+        elif   meshnum == 17:
+               divstr = "7"      
+                     
+               
+        return get_meshcode(parent, math.floor(x / ratio), math.floor(y / ratio)) + divstr + format(int(y % ratio),'02') + format(int(x % ratio), '02')
+    elif meshnum >= 18 and meshnum <= 23:
+    
+    
+        if meshnum == 18:
+               divstr = "2"
+        elif  meshunum == 19:
+               divstr = "5"
+        elif  meshunum == 20:
+               divstr = "3"
+        elif   meshunum == 21:
+               divstr = "6"
+               
+        elif    meshnum == 22:
+               divstr = "4"
+        elif    meshnum == 23:
+                divstr = "7"
+
+    
+        return get_meshcode(parent, math.floor(x / ratio), math.floor(y / ratio)) + "2" + format(int(y % ratio), '03') + format(int(x % ratio), '03' )
     else:
         return get_meshcode(parent, math.floor(x / ratio), math.floor(y / ratio)) + str(y % ratio) + str(x % ratio)
 
@@ -239,6 +254,7 @@ if __name__ == "__main__":
         meshnum = 9
     elif meshnum == "5m":
         meshnum = 10
+  
     else:
         try:
             meshnum = int(meshnum)
@@ -246,7 +262,7 @@ if __name__ == "__main__":
             raise ValueError(
                 "メッシュ次数を正しく入力してください あなたの入力：" + str(args.meshnum))
 
-    if meshnum < 1 or 10 < meshnum:
+    if meshnum < 1 or 23 < meshnum:
         raise ValueError("メッシュ次数を正しく入力してください あなたの入力：" + str(args.meshnum))
 
     extent_texts = args.extent

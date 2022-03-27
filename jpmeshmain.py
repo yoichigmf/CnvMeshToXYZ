@@ -226,6 +226,33 @@ def get_mesh(meshnum: int, x: int, y: int) -> dict:
             [right_lon, bottom_lat],
             [left_lon, bottom_lat]
         ]],
+        "code": str(round(bottom_lat * 1.5)) + str(round(left_lon))[1:] + get_meshcode(meshnum, x, y)
+    }
+
+
+def get_mesh_error(meshnum: int, x: int, y: int) -> dict:
+    """[summary]
+    メッシュ次数、メッシュ番地からメッシュのジオメトリとメッシュコードを返す
+
+    Args:
+        meshnum (int): メッシュ次数
+        x (int): 原点から右方向に数えたメッシュ番地
+        y (int): 原点から上方向に数えたメッシュ番地
+
+    Returns:
+        dict: {"geometry":<メッシュのジオメトリ>, "code":<メッシュコード>}
+    """
+    x_size, y_size = get_meshsize(meshnum)
+    left_lon, bottom_lat = get_mesh_vertex(x, x_size, y, y_size)
+    right_lon, top_lat = get_mesh_vertex(x + 1, x_size, y + 1, y_size)
+    return {
+        "geometry": [[
+            [left_lon, bottom_lat],
+            [left_lon, top_lat],
+            [right_lon, top_lat],
+            [right_lon, bottom_lat],
+            [left_lon, bottom_lat]
+        ]],
         "code": str(int(bottom_lat * 1.5)) + str(int(left_lon))[1:] + get_meshcode(meshnum, x, y)
     }
 
